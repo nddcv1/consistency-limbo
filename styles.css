@@ -56,6 +56,7 @@ a { color: inherit; text-decoration: none; }
 .stage::before, .stage::after { content: ""; position: absolute; width: 8px; height: 8px; border-color: var(--line-strong); pointer-events: none; }
 .stage::before { left: -1px; top: -1px; border-left: 1px solid; border-top: 1px solid; }
 .stage::after { right: -1px; bottom: -1px; border-right: 1px solid; border-bottom: 1px solid; }
+.scale-ribbon { position: absolute; top: 10px; left: 66px; z-index: 1; pointer-events: none; padding: 3px 8px; border: 1px solid var(--line); background: rgba(10, 16, 36, .82); color: var(--muted); font-family: var(--font-mono); font-size: 10px; letter-spacing: .03em; font-variant-numeric: tabular-nums; white-space: nowrap; }
 #canvas { display: block; width: 100%; aspect-ratio: 16 / 9; min-height: 260px; touch-action: none; cursor: default; }
 .stage-footer { display: flex; justify-content: space-between; align-items: center; gap: 14px; border-top: 1px solid var(--line); padding: 8px 12px; color: var(--muted); font-size: 11px; }
 .stage-hint { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -100,6 +101,8 @@ a { color: inherit; text-decoration: none; }
 .legend-line { width: 16px; height: 2px; display: inline-block; }
 .legend-required { background: var(--band); }
 .legend-yours { background: var(--window); margin-left: 8px; }
+.legend-breach { background: var(--danger); margin-left: 8px; }
+.chart-note { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.35; }
 .quiz { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid var(--line); }
 .quiz-q { margin: 0 0 4px; font-size: 13px; }
 .quiz-option { text-align: left; border: 1px solid var(--line); background: transparent; padding: 7px 9px; color: var(--text); font-size: 12px; cursor: pointer; }
@@ -153,11 +156,17 @@ input[type="range"]:disabled { opacity: .35; cursor: not-allowed; }
   .overlay-card h2 { font-size: 28px; }
 }
 @media (max-height: 620px) and (min-width: 720px) {
+  .app { padding-bottom: 6px; }
+  .topbar { height: 50px; }
+  .layout { padding-top: 12px; padding-bottom: 8px; }
   .rail { gap: 2px; }
-  .status { min-height: 20px; }
+  .objective { font-size: 12px; line-height: 1.4; }
+  .status { min-height: 20px; font-size: 12px; line-height: 1.35; }
   #envelope { height: 96px; }
   .boss-chart { padding-top: 6px; gap: 3px; }
-  .readouts { padding: 8px 0; }
+  .chart-note { font-size: 9px; line-height: 1.3; }
+  .readouts { padding: 5px 0; }
+  .readouts dd { font-size: 19px; }
   .controls { padding-top: 6px; gap: 10px; }
   .control { gap: 2px; }
   input[type="range"] { height: 16px; }

@@ -24,6 +24,7 @@
 
     <main class="layout">
       <section class="stage" aria-label="函数图像">
+        <div id="scale-ribbon" class="scale-ribbon" hidden></div>
         <canvas id="canvas" role="img" aria-label="ε-δ 图像"></canvas>
         <div class="stage-footer">
           <span id="stage-hint" class="stage-hint">拖动 δ 窗口的边，或使用下方滑块。</span>
@@ -54,7 +55,9 @@
           <p class="chart-legend">
             <span class="legend-line legend-required"></span>每个 x₀ 所需 δ
             <span class="legend-line legend-yours"></span>你的 δ
+            <span class="legend-line legend-breach"></span>被击穿的 x₀
           </p>
+          <p class="chart-note">横线压不到曲线下方，就是 limbo 的墙。</p>
         </div>
         <div class="actions">
           <button id="scan-button" class="button primary" type="button" hidden>扫描所有 x₀</button>
@@ -84,11 +87,19 @@
     </footer>
   </div>
 
-  <div id="final-overlay" class="overlay" hidden>
+  <div
+    id="final-overlay"
+    class="overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="final-title"
+    hidden
+  >
     <div class="overlay-card">
       <p class="kicker">LV. 05 / LIMBO</p>
-      <h2>你撞到了 limbo 的墙</h2>
+      <h2 id="final-title">你撞到了 limbo 的墙</h2>
       <p>x² 在 [0,∞) 上不一致连续。限制定义域到 [0, b]，一个 δ 就又能管住所有 x₀。</p>
+      <p>任何有限范围都能找到足够小的 δ；没有统一 δ，是因为 x₀ 没有上限。</p>
       <div class="overlay-actions">
         <button id="replay-button" class="button primary" type="button">再玩一次</button>
         <button id="home-button" class="button quiet" type="button">回到第一关</button>

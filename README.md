@@ -5,7 +5,7 @@
 *An interactive ε-δ playground for real-analysis students — drag until continuity clicks.*
 
 <p align="center">
-  <img src="assets/demo.gif" width="720" alt="Consistency Limbo：拖动 ε、δ 和 x₀，最后在一致连续 boss 关撞上没有统一 δ 的墙">
+  <img src="assets/demo.gif" width="720" alt="Consistency Limbo：拖动 δ 和 x₀，ε 锁定，最后在一致连续 boss 关撞上没有统一 δ 的墙">
 </p>
 
 <p align="center">
@@ -39,7 +39,7 @@
 
 第二幕里，每次你觉得找到了，范围就自动 ×10。任何固定的 δ 都会在更远处被击穿。右侧包络图画出“每个 x₀ 至少需要多小的 δ”，你的 δ 是一条横线——横线永远压不到曲线下方。
 
-这不是形式证明；它是一次可以亲手撞上的演示。README 的 Known limitations 里写清了这一点。
+这不是形式证明；它是一次可以亲手撞上的演示。README 的已知限制里写清了这一点。
 
 ## 和现有 ε-δ 工具的区别
 

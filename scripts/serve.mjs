@@ -17,8 +17,21 @@ const MIME = {
 
 export function startServer(port = Number(process.env.PORT) || 8000) {
   const server = http.createServer((req, res) => {
-    const urlPath = decodeURIComponent((req.url || '/').split('?')[0]);
+    let urlPath;
+    try {
+      urlPath = decodeURIComponent((req.url || '/').split('?')[0]);
+    } catch {
+      res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Bad request');
+      return;
+    }
     const rel = urlPath === '/' ? 'index.html' : urlPath.replace(/^\/+/, '');
+    const segments = rel.split(/[\\/]+/);
+    if (segments.some((segment) => segment.startsWith('.'))) {
+      res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Forbidden');
+      return;
+    }
     const file = path.resolve(ROOT, rel);
     const insideRoot = file === ROOT || file.startsWith(ROOT + path.sep);
     if (!insideRoot) {
@@ -42,8 +55,8 @@ export function startServer(port = Number(process.env.PORT) || 8000) {
 
   return new Promise((resolve, reject) => {
     server.once('error', reject);
-    server.listen(port, () => {
-      console.log(`Consistency Limbo → http://localhost:${port}`);
+    server.listen(port, '127.0.0.1', () => {
+      console.log(`Consistency Limbo → http://127.0.0.1:${port}`);
       resolve(server);
     });
   });

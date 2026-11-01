@@ -87,6 +87,26 @@ export function hitTest(viewport, stage, state, px, py) {
   return null;
 }
 
+export function checkpointHit(viewport, stage, state, px, py) {
+  if (!stage || stage.win.type !== 'checkpoints' || !Array.isArray(state.checkpoints)) {
+    return null;
+  }
+  const { plot } = viewport;
+  if (py < plot.y - 10 || py > plot.y + plot.h + 10) return null;
+  let best = null;
+  let bestDistance = 12;
+  for (const cp of state.checkpoints) {
+    const sx = worldToScreen(viewport, cp.value, 0).x;
+    if (sx < plot.x - 12 || sx > plot.x + plot.w + 12) continue;
+    const distance = Math.abs(px - sx);
+    if (distance <= bestDistance) {
+      bestDistance = distance;
+      best = cp.value;
+    }
+  }
+  return best;
+}
+
 function niceStep(span, count) {
   const raw = span / Math.max(1, count);
   const mag = 10 ** Math.floor(Math.log10(raw || 1));
@@ -119,7 +139,7 @@ function formatTick(value, span) {
 function gapText(gap) {
   if (!Number.isFinite(gap)) return '∞';
   if (gap <= 0) return '0';
-  if (gap < 0.001) return gap.toExponential(2);
+  if (gap < 0.001 || gap >= 1000) return gap.toExponential(2);
   return gap.toFixed(3);
 }
 
@@ -188,6 +208,10 @@ function drawDomainMasks(ctx, viewport, domain) {
     if (b <= a) continue;
     const x1 = worldToScreen(viewport, a, 0).x;
     const x2 = worldToScreen(viewport, b, 0).x;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x1, plot.y, x2 - x1, plot.h);
+    ctx.clip();
     ctx.fillStyle = 'rgba(140,170,255,0.045)';
     ctx.fillRect(x1, plot.y, x2 - x1, plot.h);
     ctx.strokeStyle = 'rgba(140,170,255,0.10)';
@@ -205,6 +229,7 @@ function drawDomainMasks(ctx, viewport, domain) {
       ctx.textBaseline = 'top';
       ctx.fillText('定义域外', (x1 + x2) / 2, plot.y + 8);
     }
+    ctx.restore();
   }
   ctx.restore();
 }
@@ -247,9 +272,9 @@ function drawWindow(ctx, viewport, state, time, reduceMotion) {
   ctx.clip();
   ctx.fillStyle = state.check.passed
     ? `rgba(123,241,168,${0.06 + pulse * 0.04})`
-    : COLORS.windowFill;
+    : 'rgba(255,107,107,0.07)';
   ctx.fillRect(left, plot.y, right - left, plot.h);
-  ctx.strokeStyle = state.check.passed ? COLORS.success : COLORS.window;
+  ctx.strokeStyle = state.check.passed ? COLORS.success : COLORS.danger;
   ctx.globalAlpha = state.check.passed ? 0.65 + pulse * 0.35 : 0.8;
   ctx.lineWidth = 1.2;
   ctx.beginPath();

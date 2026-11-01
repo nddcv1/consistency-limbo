@@ -23,6 +23,7 @@ import {
   drawEnvelope,
   makeViewport,
   hitTest,
+  checkpointHit,
   screenToWorld,
 } from './renderer.js';
 
@@ -33,7 +34,9 @@ const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').match
 
 const $ = (id) => document.getElementById(id);
 const el = {
+  app: document.querySelector('.app'),
   canvas: $('canvas'),
+  scaleRibbon: $('scale-ribbon'),
   levelRail: $('level-rail'),
   stageKicker: $('stage-kicker'),
   stageTitle: $('stage-title'),
@@ -68,6 +71,9 @@ let progress = demoMode ? createProgress() : loadProgress();
 let state = createState(levelIndexFromParam(params.get('level')));
 let ui = { quizOpen: false, scanning: false, drag: null, message: null };
 let cameraX0 = state.x0;
+let overlayOpen = false;
+let quizFocusOpen = false;
+let lastStatus = { text: null, tone: null };
 
 function loadProgress() {
   try {
@@ -88,6 +94,37 @@ function saveProgress() {
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function setStatus(text, tone) {
+  if (lastStatus.text === text && lastStatus.tone === tone) return;
+  lastStatus = { text, tone };
+  el.status.textContent = text;
+  el.status.classList.toggle('pass', tone === 'pass');
+  el.status.classList.toggle('fail', tone === 'fail');
+}
+
+function syncQuizFocus(open) {
+  if (open === quizFocusOpen) return;
+  quizFocusOpen = open;
+  if (open) {
+    el.quizPanel.querySelector('.quiz-option')?.focus();
+  } else if (!el.quizOpen.hidden) {
+    el.quizOpen.focus();
+  }
+}
+
+function syncOverlay(open) {
+  el.finalOverlay.hidden = !open;
+  if (open === overlayOpen) return;
+  overlayOpen = open;
+  el.app.inert = open;
+  if (open) {
+    el.replayButton.focus();
+  } else if (el.finalOverlay.contains(document.activeElement)) {
+    const active = el.levelRail.querySelector('.rail-item.active');
+    if (active) active.focus();
+  }
 }
 
 function formatX0(value) {
@@ -244,8 +281,8 @@ function loadLevel(index, stageIndex = 0) {
   const level = LEVELS[Math.max(0, Math.min(LEVELS.length - 1, index))];
   state = createState(LEVELS.indexOf(level), stageIndex);
   ui = { quizOpen: false, scanning: false, drag: null, message: null };
+  quizFocusOpen = false;
   cameraX0 = state.x0;
-  el.finalOverlay.hidden = true;
   buildRail();
   updateUrl();
   syncControls();
@@ -279,19 +316,24 @@ function renderUI() {
     !ui.quizOpen &&
     !state.completed
   );
-  el.finalOverlay.hidden = !(
-    state.levelIndex === 4 &&
-    state.stageIndex === 1 &&
-    state.completed
-  );
+  syncQuizFocus(ui.quizOpen);
+  syncOverlay(state.levelIndex === 4 && state.stageIndex === 1 && state.completed);
 
   if (isScan) {
     const total = scanTotal();
-    el.scanCount.textContent = `${scanIndex()} / ${total}`;
+    el.scanCount.textContent = ui.scanning
+      ? `x₀ = ${formatX0(scanCurrentX0())} · ${scanIndex()} / ${total}`
+      : `${scanIndex()} / ${total}`;
     el.scanFill.style.width = `${Math.max(0, Math.min(1, state.scan.progress)) * 100}%`;
   }
   if (stage.win.type === 'impossible-scan') {
     el.chartRange.textContent = `R = ${formatX0(state.scan.rangeMax)}`;
+    el.scaleRibbon.hidden = false;
+    el.scaleRibbon.textContent = `x₀ = ${formatX0(state.x0)} · 范围 0–${formatX0(
+      state.scan.rangeMax,
+    )}`;
+  } else {
+    el.scaleRibbon.hidden = true;
   }
 
   if (stage.win.type === 'checkpoints') {
@@ -335,7 +377,7 @@ function renderUI() {
     text = ui.message;
     tone = 'pass';
   } else if (ui.scanning) {
-    text = `扫描中 · x₀ = ${formatX0(scanCurrentX0())}`;
+    text = '正在扫描所有 x₀…';
   } else if (stage.win.type === 'impossible-scan' && state.completed) {
     text = '你撞到了 limbo 的墙。';
     tone = 'pass';
@@ -374,9 +416,7 @@ function renderUI() {
     tone = 'fail';
   }
 
-  el.status.textContent = text;
-  el.status.classList.toggle('pass', tone === 'pass');
-  el.status.classList.toggle('fail', tone === 'fail');
+  setStatus(text, tone);
   el.canvas.setAttribute(
     'aria-label',
     `x₀ = ${formatX0(state.x0)}，δ = ${formatDelta(state.delta)}。${
@@ -487,6 +527,15 @@ el.canvas.addEventListener('pointerdown', (event) => {
   const point = canvasPoint(event);
   const stage = getStage(state);
   const viewport = makeViewport(point.size, stage, state, cameraX0);
+  const checkpoint = checkpointHit(viewport, stage, state, point.x, point.y);
+  if (checkpoint !== null) {
+    state = setX0(state, checkpoint);
+    commitProgress();
+    syncControls();
+    render({ chart: true });
+    event.preventDefault();
+    return;
+  }
   const hit = hitTest(viewport, stage, state, point.x, point.y);
   if (!hit) return;
   el.canvas.setPointerCapture(event.pointerId);
@@ -505,6 +554,11 @@ el.canvas.addEventListener('pointermove', (event) => {
   const stage = getStage(state);
   if (!ui.drag) {
     const viewport = makeViewport(point.size, stage, state, cameraX0);
+    const checkpoint = checkpointHit(viewport, stage, state, point.x, point.y);
+    if (checkpoint !== null) {
+      el.canvas.style.cursor = 'pointer';
+      return;
+    }
     const hit = hitTest(viewport, stage, state, point.x, point.y);
     el.canvas.style.cursor =
       hit === 'delta' ? 'ew-resize' : hit === 'x0' ? 'grab' : 'default';
@@ -607,8 +661,8 @@ if (demoMode) {
     loadLevel: (levelIndex, stageIndex = 0) => {
       state = createState(levelIndex, stageIndex);
       ui = { quizOpen: false, scanning: false, drag: null, message: null };
+      quizFocusOpen = false;
       cameraX0 = state.x0;
-      el.finalOverlay.hidden = true;
       buildRail();
       syncControls();
       render({ chart: true });
