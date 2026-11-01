@@ -153,9 +153,14 @@ input[type="range"]:disabled { opacity: .35; cursor: not-allowed; }
   .overlay-card h2 { font-size: 28px; }
 }
 @media (max-height: 620px) and (min-width: 720px) {
-  .rail { gap: 5px; }
+  .rail { gap: 2px; }
   .status { min-height: 20px; }
   #envelope { height: 96px; }
+  .boss-chart { padding-top: 6px; gap: 3px; }
+  .readouts { padding: 8px 0; }
+  .controls { padding-top: 6px; gap: 10px; }
+  .control { gap: 2px; }
+  input[type="range"] { height: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .001ms !important; }

@@ -349,12 +349,12 @@ function renderUI() {
     tone = 'fail';
   } else if (stage.win.type === 'impossible-scan' && state.check.passed) {
     text = '当前 x₀ 全绿。点「扫描所有 x₀」，看看更远处。';
-  } else if (stage.win.type === 'scan-all' && state.stageComplete) {
+  } else if (stage.win.type === 'scan-all' && state.stageComplete && state.check.passed) {
     text = stage.copy.success;
     tone = 'pass';
   } else if (stage.win.type === 'scan-all' && state.check.passed) {
     text = '当前 x₀ 全绿。点「扫描所有 x₀」，检查整段定义域。';
-  } else if (state.completed) {
+  } else if (state.completed && state.check.passed) {
     text = stage.copy.success;
     tone = 'pass';
   } else if (stage.win.type === 'checkpoints') {
