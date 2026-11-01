@@ -157,15 +157,18 @@ function scanTotal() {
 function scanIndex() {
   const total = state.scan.points.length;
   if (!total) return 0;
-  return Math.min(total, Math.round(state.scan.progress * (total - 1)) + 1);
+  return Math.max(
+    0,
+    Math.min(total, Math.round(state.scan.progress * (total - 1)) + 1),
+  );
 }
 
 function scanCurrentX0() {
   const points = state.scan.points;
   if (!points.length) return state.x0;
-  const index = Math.min(
-    points.length - 1,
-    Math.round(state.scan.progress * (points.length - 1)),
+  const index = Math.max(
+    0,
+    Math.min(points.length - 1, Math.round(state.scan.progress * (points.length - 1))),
   );
   return points[index].x0;
 }
@@ -427,7 +430,7 @@ function animateScan() {
         resolve();
         return;
       }
-      const t = Math.min(1, (now - start) / duration);
+      const t = Math.min(1, Math.max(0, (now - start) / duration));
       state = { ...state, scan: { ...state.scan, progress: t * stop } };
       render({ chart: false });
       if (t < 1) requestAnimationFrame(tick);
